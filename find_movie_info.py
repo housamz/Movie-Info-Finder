@@ -58,20 +58,19 @@ def movie_data(movie_on_IMDB):
 
 	# Start IMDB crawling
 	s = read_url_to_html(movie_on_IMDB)
-	IMDB_data = s.find('div', class_ ='title_bar_wrapper'.split())
+	IMDB_data = s.find('div', class_='title_bar_wrapper'.split())
 
 	alldata["name"] = IMDB_data.find("h1").contents[0].strip()
-	print alldata["name"] + " ##########################################"
 
 	year = IMDB_data.find("span", {"id": "titleYear"})
 
-	if (not year):
+	if not year:
 		return
 
 	alldata["year"] = IMDB_data.find("span", {"id": "titleYear"}).text[1:-1]
 	alldata["summary"] = s.find("div", {"class": "summary_text"}).text.strip()
 
-	posterDiv = s.find('div', class_ ='poster'.split())	
+	posterDiv = s.find('div', class_='poster'.split())
 	if(posterDiv):
 		posterImage = posterDiv.find("img")
 		alldata["poster"] = posterImage['src']
@@ -84,7 +83,7 @@ def movie_data(movie_on_IMDB):
 
 	IMDB_ratings = IMDB_data.find("span", {"itemprop": "ratingValue"})
 
-	if(IMDB_ratings):
+	if IMDB_ratings:
 		alldata["IMDB_rating"] = IMDB_data.find("span", {"itemprop": "ratingValue"}).text
 		alldata["IMDB_votes"] = IMDB_data.find("span", {"itemprop": "ratingCount"}).text.replace(',', '')
 	else:
@@ -96,12 +95,12 @@ def movie_data(movie_on_IMDB):
 	# Start Meta Critic crawling
 	print "starting MC"
 	s = read_url_to_html(MC_url%(name))
-	MC_search = s.findAll('li', class_ ='result'.split())
+	MC_search = s.findAll('li', class_='result'.split())
 	for result in MC_search:
 		stats = result.find("div", {"class": "main_stats"})
 		year = stats.find("p").text
 		year = remove_non_num(year)
-		if(year == alldata["year"]):
+		if year == alldata["year"]:
 			first_link = stats.find("h3", {"class": "product_title"})
 			first_link = first_link.find("a")
 			link = 'http://www.metacritic.com' + first_link["href"]
@@ -132,12 +131,12 @@ def movie_data(movie_on_IMDB):
 
 	# Start Rotten Tomatoes crawling
 	print "starting RT"
-	s = read_url_to_html(RT_url%(name))
+	s = read_url_to_html(RT_url % name)
 	RT_search = s.get_text()
 	
 	text = find_between(RT_search, '"movies":[', ',"tvCount":')
 	year = find_between(text, '"year":', ',')
-	if(year ==  alldata["year"]):
+	if year == alldata["year"]:
 		link = 'https://www.rottentomatoes.com' + find_between(text, ',"url":"', '"')
 
 		print "found RT link: " + link
@@ -157,8 +156,6 @@ def movie_data(movie_on_IMDB):
 		alldata["RT_users_rating"] = remove_non_num(s.find("div", {"class": "audience-score"}).text)
 		alldata["RT_users_count"] = find_between(s.find("div", {"class": "audience-info"}).text, "User Ratings:\n", "\n").strip().replace(',', '')
 		print "done"
-
-	# jsonFile.append(alldata)
 
 	return alldata
 
