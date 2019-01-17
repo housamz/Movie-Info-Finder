@@ -3,15 +3,13 @@ import urllib  # handle url encoding
 import re  # handling regular expression
 
 from bs4 import BeautifulSoup  # searching source code
-from string import Template # handling the html output
+from string import Template  # handling the html output
 
 headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'}
 
 IMDB_url = 'https://www.imdb.com/find?q=%s&s=tt&ttype=ft&ref_=fn_ftl'
 MC_url	 = 'http://www.metacritic.com/search/movie/%s/results'
 RT_url	 = 'https://www.rottentomatoes.com/search/?search=%s'
-
-htmltemplate = Template('<img class="pull-left" style="margin:0 10px" src="$poster"><h5 class="card-title">$name <small>($year)</small></h5><p>$summary</p><table class="table table-striped"><thead><tr><th colspan="2">&nbsp;</th><th><a href="$IMDB_link" target="_blank">IMDB</a></th><th><a href="$MC_link" target="_blank">MC</a></th><th><a href="$RT_link" target="_blank">RT</a></th></tr></thead><tbody><tr><td rowspan="2">Critics</td><td>Rating</td><td>N/A</td><td>$MC_critics_rating</td><td>$RT_critics_rating</td></tr><tr><td>Votes</td><td>N/A</td><td>$MC_critics_count</td><td>$RT_critics_count</td></tr><tr><td rowspan="2">Users</td><td>Rating</td><td>$IMDB_rating</td><td>$MC_users_rating</td><td>$RT_users_rating</td></tr><tr><td>Votes</td><td>$IMDB_votes</td><td>$MC_users_count</td><td>$RT_users_count</td></tr></tbody></table>')
 
 def find_between(s, first, last):
 	try:
@@ -156,8 +154,6 @@ def movie_data(movie_on_IMDB):
 		alldata["RT_users_rating"] = remove_non_num(s.find("div", {"class": "audience-score"}).text)
 		alldata["RT_users_count"] = find_between(s.find("div", {"class": "audience-info"}).text, "User Ratings:\n", "\n").strip().replace(',', '')
 		print "done"
-
-		alldata["html"] = htmltemplate.substitute(poster = alldata["poster"], name = alldata["name"], year = alldata["year"], summary = alldata["summary"], IMDB_link = alldata["IMDB_link"], MC_link = alldata["MC_link"], RT_link = alldata["RT_link"], MC_critics_rating = alldata["MC_critics_rating"], RT_critics_rating = alldata["RT_critics_rating"], MC_critics_count = alldata["MC_critics_count"], RT_critics_count = alldata["RT_critics_count"], IMDB_rating = alldata["IMDB_rating"], MC_users_rating = alldata["MC_users_rating"], RT_users_rating = alldata["RT_users_rating"], IMDB_votes = alldata["IMDB_votes"], MC_users_count = alldata["MC_users_count"], RT_users_count = alldata["RT_users_count"])
 
 	return alldata
 
