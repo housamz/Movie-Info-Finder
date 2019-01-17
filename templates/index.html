@@ -52,7 +52,16 @@
                     </span>
                 </form>
 
-                <pre hidden></pre>
+                <div class="row" id="moviedata" hidden>
+                    <div class="col-lg-6">
+                        <pre></pre>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card h-100">
+                            <div class="card-body" id="moviecard"></div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -70,21 +79,40 @@
     <script>
     $(function(){
         $('#getInfo').click(function(){
+
+            // disable the button until response
             $(this).attr("disabled", "disabled");
             $(this).find("span").removeClass("glyphicon-play").addClass("glyphicon-hourglass");
+
             $.ajax({
                 url: '/findMovieInfo',
                 data: $('form').serialize(),
                 type: 'POST',
                 success: function(response){
+                    // convert the response to a valid JSON Object
                     var jsonObj = JSON.parse(response);
-                    var jsonPretty = JSON.stringify(jsonObj, null, '\t');
-                    $('pre').show().text(jsonPretty);
 
+                    // Insert the HTML part
+                    $("#moviecard").html(jsonObj["html"]);
+
+                    // delete the HTML from the object for better view
+                    delete jsonObj["html"];
+
+                    // prettify the JSON
+                    var jsonPretty = JSON.stringify(jsonObj, null, '\t');
+                    
+                    // display the JSON
+                    $('#moviedata').show().find("pre").text(jsonPretty);
+
+                    // enable the button again
                     $('#getInfo').removeAttr("disabled").find("span").removeClass("glyphicon-hourglass").addClass("glyphicon-play");
                 },
                 error: function(error){
-                    $('pre').show().text(error);
+
+                    // display the error message
+                    $('#moviedata').show().find("pre").text(error);
+
+                    // enable the button again
                     $('#getInfo').removeAttr("disabled").find("span").removeClass("glyphicon-hourglass").addClass("glyphicon-play");
                 }
             });
