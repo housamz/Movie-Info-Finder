@@ -10,7 +10,7 @@ Please install the libraries as follows:
 `pip install lxml`
 
 ## How to use
-- Run app.py
+- Run the app using `python app.py`
 - Go to your browser, navigate to `http://127.0.0.1:5000/` (usually).
 - Enter the movie link from IMDB, e.g. `https://www.imdb.com/title/tt2488496`
 - Click the triangular button.

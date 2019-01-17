@@ -71,6 +71,7 @@
     $(function(){
         $('#getInfo').click(function(){
             $(this).attr("disabled", "disabled");
+            $(this).find("span").removeClass("glyphicon-play").addClass("glyphicon-hourglass");
             $.ajax({
                 url: '/findMovieInfo',
                 data: $('form').serialize(),
@@ -80,11 +81,11 @@
                     var jsonPretty = JSON.stringify(jsonObj, null, '\t');
                     $('pre').show().text(jsonPretty);
 
-                    $('#getInfo').removeAttr("disabled");
+                    $('#getInfo').removeAttr("disabled").find("span").removeClass("glyphicon-hourglass").addClass("glyphicon-play");
                 },
                 error: function(error){
                     $('pre').show().text(error);
-                    $('#getInfo').removeAttr("disabled");
+                    $('#getInfo').removeAttr("disabled").find("span").removeClass("glyphicon-hourglass").addClass("glyphicon-play");
                 }
             });
         });
