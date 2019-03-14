@@ -4,10 +4,10 @@ This tool finds all important info about a movie from three sources, IMDB, Meta 
 The interface uses Python Flask, and the data fetching depends on Python 2.7 libraries; these libraries need to be installed for the code to work.
 
 This code uses the following libraries:
-- beautifulsoup4==4.7.1
-- Flask==1.0.2
-- lxml==4.3.0
-- requests==2.21.0
+- beautifulsoup4
+- Flask
+- lxml
+- requests
 
 ## How to install:
 Run `pip install -r requirements.txt`
