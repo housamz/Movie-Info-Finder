@@ -1,6 +1,7 @@
 import requests  # getting links source code
 import urllib  # handle url encoding
 import re  # handling regular expression
+import json #handling RT data as JSON
 
 from bs4 import BeautifulSoup  # searching source code
 from string import Template  # handling the html output
@@ -133,27 +134,37 @@ def movie_data(movie_on_IMDB):
 	RT_search = s.get_text()
 	
 	text = find_between(RT_search, '"movies":[', ',"tvCount":')
-	year = find_between(text, '"year":', ',')
-	if year == alldata["year"]:
-		link = 'https://www.rottentomatoes.com' + find_between(text, ',"url":"', '"')
+	text = "[" + text
+	text = json.loads(text)
+	# year = find_between(text, '"year":', ',')
 
-		print "found RT link: " + link
+	for i in text:
+		if i['year'] == int(alldata["year"]):
+			RT_link = 'https://www.rottentomatoes.com' + i['url']
+			break
 
-		s = read_url_to_html(link)
-		
-		alldata["RT_link"] = link
-		RT_critics_data = s.find("div", {"class": "critic-score"})
-		
-		if (RT_critics_data):
-			alldata["RT_critics_rating"] = remove_non_num(RT_critics_data.text)
-			alldata["RT_critics_count"] = find_between(s.find("div", {"id": "scoreStats"}).text, "Reviews Counted: ", "\n")
-		else:
-			alldata["RT_critics_rating"] = "none"
-			alldata["RT_critics_count"] = "none"
+	print "found RT link: " + RT_link
 
-		alldata["RT_users_rating"] = remove_non_num(s.find("div", {"class": "audience-score"}).text)
-		alldata["RT_users_count"] = find_between(s.find("div", {"class": "audience-info"}).text, "User Ratings:\n", "\n").strip().replace(',', '')
-		print "done"
+	s = read_url_to_html(RT_link)
+	
+	alldata["RT_link"] = RT_link
+	RT_critics_data = s.find("span", {"class": "mop-ratings-wrap__percentage"})
+
+	text = s.find("section", {"class": "mop-ratings-wrap__row"})
+
+	counts = text.find_all('small')
+	
+	if (RT_critics_data):
+		alldata["RT_critics_rating"] = remove_non_num(RT_critics_data.text)
+		alldata["RT_critics_count"] = re.sub(r"\W", "", counts[0].text)
+	else:
+		alldata["RT_critics_rating"] = "none"
+		alldata["RT_critics_count"] = "none"
+
+	alldata["RT_users_rating"] = remove_non_num(s.find("span", {"class": "mop-ratings-wrap__percentage--audience"}).text)
+	alldata["RT_users_count"] = re.sub(r"\W", "", counts[1].text)
+	
+	print "done"
 
 	return alldata
 
