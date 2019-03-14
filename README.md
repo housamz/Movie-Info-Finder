@@ -15,7 +15,7 @@ Run `pip install -r requirements.txt`
 ## How to use
 - Run the app using `python app.py`
 - Go to your browser, navigate to `http://127.0.0.1:5000/` (usually).
-- Enter the movie link from IMDB, e.g. `https://www.imdb.com/title/tt2488496`
+- Enter the movie link from IMDB, e.g. `https://www.imdb.com/title/tt0076759`
 - Click the triangular button.
 - Wait for a few seconds for the result JSON Object.
 
