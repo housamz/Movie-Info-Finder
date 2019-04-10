@@ -51,6 +51,11 @@ def sum_all_MC(data):
 def remove_non_num(text):
 	return re.sub('[^0-9]', '', text)
 
+def addData(jsonObject, jsonKey, jsonData):
+	jsonObject[jsonKey] = jsonData
+	print(jsonKey + ': ' + str(jsonObject[jsonKey]))
+	return jsonObject[jsonKey]
+
 
 def movie_data(movie_on_IMDB):
 	alldata = {}
@@ -59,35 +64,33 @@ def movie_data(movie_on_IMDB):
 	s = read_url_to_html(movie_on_IMDB)
 	IMDB_data = s.find('div', class_='title_bar_wrapper'.split())
 
-	alldata["name"] = IMDB_data.find("h1").contents[0].strip()
+	addData(alldata, "name", IMDB_data.find("h1").contents[0].strip())
 
 	year = IMDB_data.find("span", {"id": "titleYear"})
 
 	if not year:
 		return
 
-	alldata["year"] = IMDB_data.find("span", {"id": "titleYear"}).text[1:-1]
-	alldata["summary"] = s.find("div", {"class": "summary_text"}).text.strip()
+	addData(alldata, "year", IMDB_data.find("span", {"id": "titleYear"}).text[1:-1])
+	addData(alldata, "summary", s.find("div", {"class": "summary_text"}).text.strip())
 
 	posterDiv = s.find('div', class_='poster'.split())
 	if(posterDiv):
 		posterImage = posterDiv.find("img")
-		alldata["poster"] = posterImage['src']
+		addData(alldata, "poster", posterImage['src'])
 	else:
-		alldata["poster"] = 'http://wpmovies.scriptburn.com/wp-content/themes/wp_movies/images/noposter.jpg'
+		addData(alldata, "poster", 'http://wpmovies.scriptburn.com/wp-content/themes/wp_movies/images/noposter.jpg')
 
-	print alldata["poster"]
-
-	alldata["IMDB_link"] = movie_on_IMDB
+	addData(alldata, "IMDB_link", movie_on_IMDB)
 
 	IMDB_ratings = IMDB_data.find("span", {"itemprop": "ratingValue"})
 
 	if IMDB_ratings:
-		alldata["IMDB_rating"] = IMDB_data.find("span", {"itemprop": "ratingValue"}).text
-		alldata["IMDB_votes"] = IMDB_data.find("span", {"itemprop": "ratingCount"}).text.replace(',', '')
+		addData(alldata, "IMDB_rating", IMDB_data.find("span", {"itemprop": "ratingValue"}).text)
+		addData(alldata, "IMDB_votes", IMDB_data.find("span", {"itemprop": "ratingCount"}).text.replace(',', ''))
 	else:
-		alldata["IMDB_rating"] = "none"
-		alldata["IMDB_votes"] = "none"
+		addData(alldata, "IMDB_rating", "N/A")
+		addData(alldata, "IMDB_votes",  "N/A")
 
 	name = clean_name(alldata["name"])
 
@@ -95,38 +98,53 @@ def movie_data(movie_on_IMDB):
 	print "starting MC"
 	s = read_url_to_html(MC_url%(name))
 	MC_search = s.findAll('li', class_='result'.split())
-	for result in MC_search:
-		stats = result.find("div", {"class": "main_stats"})
-		year = stats.find("p").text
-		year = remove_non_num(year)
-		if year == alldata["year"]:
-			first_link = stats.find("h3", {"class": "product_title"})
-			first_link = first_link.find("a")
-			link = 'http://www.metacritic.com' + first_link["href"]
+	if(MC_search):
+		for result in MC_search:
+			stats = result.find("div", {"class": "main_stats"})
+			year = stats.find("p").text
+			year = remove_non_num(year)
+			if year == alldata["year"]:
+				first_link = stats.find("h3", {"class": "product_title"})
+				first_link = first_link.find("a")
+				link = 'http://www.metacritic.com' + first_link["href"]
 
-			print "found MC link: " + link
+				print "MC link: " + link
 
-			s = read_url_to_html(link)
-			MC_data = s.find("div", {"class": "reviews"})
+				s = read_url_to_html(link)
+				MC_data = s.find("div", {"class": "reviews"})
 
-			MC_users_rating = set(s.select("div.metascore_w.user.larger.movie"))
-			MC_critics_rating = set(s.select("div.metascore_w.larger.movie")) - MC_users_rating
+				MC_users_rating = set(s.select("div.metascore_w.user.larger.movie"))
+				MC_critics_rating = set(s.select("div.metascore_w.larger.movie")) - MC_users_rating
 
-			alldata["MC_link"] = link
+				addData(alldata, "MC_link", link)
 
-			if(MC_critics_rating):
-				alldata["MC_critics_rating"] = list(MC_critics_rating)[0].text
-				alldata["MC_critics_count"] = sum_all_MC(MC_data.select("a[href*=critic-reviews\?dist]"))
+				if(MC_critics_rating):
+					addData(alldata, "MC_critics_rating", list(MC_critics_rating)[0].text)
+					addData(alldata, "MC_critics_count", sum_all_MC(MC_data.select("a[href*=critic-reviews\?dist]")))
+				else:
+					addData(alldata, "MC_critics_rating", "N/A")
+					addData(alldata, "MC_critics_count", "N/A")
+				
+				if (MC_users_rating):
+					addData(alldata, "MC_users_rating", list(MC_users_rating)[0].text)
+					addData(alldata, "MC_users_count", sum_all_MC(MC_data.select("a[href*=user-reviews\?dist]")))
+				else:
+					addData(alldata, "MC_users_rating", "N/A")
+					addData(alldata, "MC_users_count", "N/A")
+				break
 			else:
-				alldata["MC_critics_rating"] = "none"
-				alldata["MC_critics_count"] = "none"
-			
-			if (MC_users_rating):
-				alldata["MC_users_rating"] = list(MC_users_rating)[0].text
-				alldata["MC_users_count"] = sum_all_MC(MC_data.select("a[href*=user-reviews\?dist]"))
-			else:
-				alldata["MC_users_rating"] = "none"
-				alldata["MC_users_count"] = "none"
+				addData(alldata, "MC_link", "N/A")
+				addData(alldata, "MC_users_rating", "N/A")
+				addData(alldata, "MC_users_count", "N/A")
+				addData(alldata, "MC_critics_rating", "N/A")
+				addData(alldata, "MC_critics_count", "N/A")
+	else:
+		addData(alldata, "MC_link", "N/A")
+		addData(alldata, "MC_users_rating", "N/A")
+		addData(alldata, "MC_users_count", "N/A")
+		addData(alldata, "MC_critics_rating", "N/A")
+		addData(alldata, "MC_critics_count", "N/A")
+
 
 	# Start Rotten Tomatoes crawling
 	print "starting RT"
@@ -142,27 +160,36 @@ def movie_data(movie_on_IMDB):
 		if i['year'] == int(alldata["year"]):
 			RT_link = 'https://www.rottentomatoes.com' + i['url']
 			break
+		else:
+			RT_link = 'N/A'
 
-	print "found RT link: " + RT_link
+	print "RT link: " + RT_link
 
-	s = read_url_to_html(RT_link)
-	
-	alldata["RT_link"] = RT_link
-	RT_critics_data = s.find("span", {"class": "mop-ratings-wrap__percentage"})
+	if(RT_link != 'N/A'):
+		s = read_url_to_html(RT_link)
+		
+		addData(alldata, "RT_link", RT_link)
+		RT_critics_data = s.find("span", {"class": "mop-ratings-wrap__percentage"})
 
-	text = s.find("section", {"class": "mop-ratings-wrap__row"})
+		text = s.find("section", {"class": "mop-ratings-wrap__row"})
 
-	counts = text.find_all('small')
-	
-	if (RT_critics_data):
-		alldata["RT_critics_rating"] = remove_non_num(RT_critics_data.text)
-		alldata["RT_critics_count"] = re.sub(r"\W", "", counts[0].text)
+		counts = text.find_all('small')
+		
+		if (RT_critics_data):
+			addData(alldata, "RT_critics_rating", remove_non_num(RT_critics_data.text))
+			addData(alldata, "RT_critics_count", re.sub(r"\W", "", counts[0].text))
+		else:
+			addData(alldata, "RT_critics_rating", "N/A")
+			addData(alldata, "RT_critics_count", "N/A")
+
+		addData(alldata, "RT_users_rating", remove_non_num(s.find("span", {"class": "mop-ratings-wrap__percentage--audience"}).text))
+		addData(alldata, "RT_users_count", re.sub(r"\W", "", counts[1].text))
 	else:
-		alldata["RT_critics_rating"] = "none"
-		alldata["RT_critics_count"] = "none"
+		addData(alldata, "RT_critics_rating", "N/A")
+		addData(alldata, "RT_critics_count", "N/A")
+		addData(alldata, "RT_users_rating", "N/A")
+		addData(alldata, "RT_users_count", "N/A")
 
-	alldata["RT_users_rating"] = remove_non_num(s.find("span", {"class": "mop-ratings-wrap__percentage--audience"}).text)
-	alldata["RT_users_count"] = re.sub(r"\W", "", counts[1].text)
 	
 	print "done"
 
