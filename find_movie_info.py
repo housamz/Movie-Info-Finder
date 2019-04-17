@@ -53,7 +53,10 @@ def remove_non_num(text):
 
 def addData(jsonObject, jsonKey, jsonData):
 	jsonObject[jsonKey] = jsonData
-	print(jsonKey + ': ' + str(jsonObject[jsonKey]))
+	if (type(jsonObject[jsonKey]) is int):
+		print(jsonKey + ': ' + str(jsonObject[jsonKey]))
+	else:
+		print(jsonKey + ': ' + jsonObject[jsonKey])
 	return jsonObject[jsonKey]
 
 
@@ -95,7 +98,7 @@ def movie_data(movie_on_IMDB):
 	name = clean_name(alldata["name"])
 
 	# Start Meta Critic crawling
-	print "starting MC"
+	print("starting MC")
 	s = read_url_to_html(MC_url%(name))
 	MC_search = s.findAll('li', class_='result'.split())
 	if(MC_search):
@@ -108,7 +111,7 @@ def movie_data(movie_on_IMDB):
 				first_link = first_link.find("a")
 				link = 'http://www.metacritic.com' + first_link["href"]
 
-				print "MC link: " + link
+				print("MC link: " + link)
 
 				s = read_url_to_html(link)
 				MC_data = s.find("div", {"class": "reviews"})
@@ -147,43 +150,61 @@ def movie_data(movie_on_IMDB):
 
 
 	# Start Rotten Tomatoes crawling
-	print "starting RT"
+	print("starting RT")
 	s = read_url_to_html(RT_url % name)
 	RT_search = s.get_text()
 	
 	text = find_between(RT_search, '"movies":[', ',"tvCount":')
-	text = "[" + text
-	text = json.loads(text)
-	# year = find_between(text, '"year":', ',')
+	if(text):
+		text = "[" + text
+		text = json.loads(text)
+		# year = find_between(text, '"year":', ',')
 
-	for i in text:
-		if i['year'] == int(alldata["year"]):
-			RT_link = 'https://www.rottentomatoes.com' + i['url']
-			break
-		else:
-			RT_link = 'N/A'
+		for i in text:
+			if i['year'] == int(alldata["year"]):
+				RT_link = 'https://www.rottentomatoes.com' + i['url']
+				break
+			else:
+				RT_link = 'N/A'
 
-	print "RT link: " + RT_link
+		print("RT link: " + RT_link)
 
-	if(RT_link != 'N/A'):
-		s = read_url_to_html(RT_link)
-		
-		addData(alldata, "RT_link", RT_link)
-		RT_critics_data = s.find("span", {"class": "mop-ratings-wrap__percentage"})
+		if(RT_link != 'N/A'):
+			s = read_url_to_html(RT_link)
+			
+			addData(alldata, "RT_link", RT_link)
+			RT_critics_data = s.find("span", {"class": "mop-ratings-wrap__percentage"})
 
-		text = s.find("section", {"class": "mop-ratings-wrap__row"})
+			text = s.find("section", {"class": "mop-ratings-wrap__row"})
 
-		counts = text.find_all('small')
-		
-		if (RT_critics_data):
-			addData(alldata, "RT_critics_rating", remove_non_num(RT_critics_data.text))
-			addData(alldata, "RT_critics_count", re.sub(r"\W", "", counts[0].text))
+			if(text != None):
+				counts = text.find_all('small')
+				
+				if (RT_critics_data):
+					addData(alldata, "RT_critics_rating", remove_non_num(RT_critics_data.text))
+					addData(alldata, "RT_critics_count", re.sub(r"\W", "", counts[0].text))
+				else:
+					addData(alldata, "RT_critics_rating", "N/A")
+					addData(alldata, "RT_critics_count", "N/A")
+
+				RT_users_data = s.find("span", {"class": "mop-ratings-wrap__percentage--audience"})
+
+				if (RT_users_data):
+					addData(alldata, "RT_users_rating", remove_non_num(RT_users_data.text))
+					addData(alldata, "RT_users_count", re.sub(r"\W", "", counts[1].text))
+				else:
+					addData(alldata, "RT_users_rating", "N/A")
+					addData(alldata, "RT_users_count", "N/A")
+			else:
+				addData(alldata, "RT_critics_rating", "N/A")
+				addData(alldata, "RT_critics_count", "N/A")
+				addData(alldata, "RT_users_rating", "N/A")
+				addData(alldata, "RT_users_count", "N/A")
 		else:
 			addData(alldata, "RT_critics_rating", "N/A")
 			addData(alldata, "RT_critics_count", "N/A")
-
-		addData(alldata, "RT_users_rating", remove_non_num(s.find("span", {"class": "mop-ratings-wrap__percentage--audience"}).text))
-		addData(alldata, "RT_users_count", re.sub(r"\W", "", counts[1].text))
+			addData(alldata, "RT_users_rating", "N/A")
+			addData(alldata, "RT_users_count", "N/A")
 	else:
 		addData(alldata, "RT_critics_rating", "N/A")
 		addData(alldata, "RT_critics_count", "N/A")
@@ -191,8 +212,8 @@ def movie_data(movie_on_IMDB):
 		addData(alldata, "RT_users_count", "N/A")
 
 	
-	print "done"
+	print("done")
 
 	return alldata
 
-# print movie_data("https://www.imdb.com/title/tt0076759")
+# print(movie_data("https://www.imdb.com/title/tt0076759"))
