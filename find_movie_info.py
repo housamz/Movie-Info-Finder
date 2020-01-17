@@ -75,17 +75,26 @@ def add_data(json_object, json_key, json_data):
     return json_object[json_key]
 
 
+def make_int(entry):
+    if entry != "NA" \
+            and entry != "tbd"\
+            and entry != '':
+        return int(entry)
+    else:
+        return entry
+
+
 def find_sum(*x):
     c = 0
     total = 0
     for item in x:
-        if item != "N/A":
+        if item != "N/A" and item != "tbd":
             c += 1
             item = item.replace('.', '')
             total += int(item)
     if c == 0:
         return "N/A"
-    return total / c
+    return int(total / c)
 
 
 def movie_data(movie_on_imdb):
@@ -179,6 +188,8 @@ def movie_data(movie_on_imdb):
 
     rt_link = 'N/A'
 
+    print(s)
+
     for i in s["movies"]:
         if i['year'] == int(all_data["year"]):
             rt_link = 'https://www.rottentomatoes.com' + i['url']
@@ -197,7 +208,7 @@ def movie_data(movie_on_imdb):
 
             if rt_critics_data:
                 add_data(all_data, "RT_critics_rating", remove_non_num(rt_critics_data.text))
-                add_data(all_data, "RT_critics_count", int(re.sub(r"\W", "", counts[0].text)))
+                add_data(all_data, "RT_critics_count", make_int(re.sub(r"\W", "", counts[0].text)))
             else:
                 add_data(all_data, "RT_critics_rating", "N/A")
                 add_data(all_data, "RT_critics_count", "N/A")
@@ -206,9 +217,13 @@ def movie_data(movie_on_imdb):
 
             if rt_users_data:
                 audience_score = rt_users_data.find("span", {"class": "mop-ratings-wrap__percentage"})
-                add_data(all_data, "RT_users_rating", remove_non_num(audience_score.text))
+                if audience_score:
+                    add_data(all_data, "RT_users_rating", remove_non_num(audience_score.text))
+                else:
+                    add_data(all_data, "RT_users_rating", "N/A")
+
                 audience_count = rt_users_data.find("strong", {"class": "mop-ratings-wrap__text--small"})
-                add_data(all_data, "RT_users_count", int(re.sub("[^0-9]", "", audience_count.text)))
+                add_data(all_data, "RT_users_count", make_int(re.sub("[^0-9]", "", audience_count.text)))
             else:
                 add_data(all_data, "RT_users_rating", "N/A")
                 add_data(all_data, "RT_users_count", "N/A")
@@ -224,8 +239,8 @@ def movie_data(movie_on_imdb):
         add_data(all_data, "RT_users_count", "N/A")
 
     add_data(all_data, "users",
-             int(find_sum(all_data["IMDB_rating"], all_data["MC_users_rating"], all_data["RT_users_rating"])))
-    add_data(all_data, "critics", int(find_sum(all_data["MC_critics_rating"], all_data["RT_critics_rating"])))
+             find_sum(all_data["IMDB_rating"], all_data["MC_users_rating"], all_data["RT_users_rating"]))
+    add_data(all_data, "critics", find_sum(all_data["MC_critics_rating"], all_data["RT_critics_rating"]))
 
     print("done")
 
