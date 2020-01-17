@@ -188,8 +188,6 @@ def movie_data(movie_on_imdb):
 
     rt_link = 'N/A'
 
-    print(s)
-
     for i in s["movies"]:
         if i['year'] == int(all_data["year"]):
             rt_link = 'https://www.rottentomatoes.com' + i['url']
