@@ -1,4 +1,4 @@
 beautifulsoup4==4.7.1
 Flask==1.0.2
-lxml==4.6.3
+lxml==4.6.5
 requests==2.21.0
